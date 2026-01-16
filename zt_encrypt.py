@@ -25,6 +25,16 @@ ARGON_PARALLELISM = 8
 
 
 # =====================
+# HELPER FUNCTIONS
+# =====================
+def ensure_zte_extension(filepath: str) -> str:
+    """Otomatis menambahkan .zte extension jika belum ada"""
+    if not filepath.lower().endswith('.zte'):
+        return filepath + '.zte'
+    return filepath
+
+
+# =====================
 # CRYPTO CORE
 # =====================
 def paranoid_kdf(password: str, salt: bytes) -> bytes:
@@ -49,6 +59,7 @@ def paranoid_kdf(password: str, salt: bytes) -> bytes:
 
 
 def encrypt_file(input_path, output_path, password):
+    output_path = ensure_zte_extension(output_path)
     filesize = os.path.getsize(input_path)
 
     salt = os.urandom(SALT_SIZE)
@@ -85,6 +96,10 @@ def encrypt_file(input_path, output_path, password):
 
 
 def decrypt_file(input_path, output_path, password):
+    # Jika output path punya .zte extension, hapus itu agar dipulihkan dengan format asli
+    if output_path.lower().endswith('.zte'):
+        output_path = output_path[:-4]
+    
     with open(input_path, "rb") as fin:
         if fin.read(len(MAGIC)) != MAGIC:
             raise ValueError("Invalid file format")

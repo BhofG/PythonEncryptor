@@ -93,12 +93,6 @@ class ZeroTrustEncryptorGUI:
         if path:
             self.output_file.set(path)
 
-    def _ensure_zte_extension(self, filepath):
-        """Otomatis menambahkan .zte extension jika belum ada"""
-        if not filepath.lower().endswith('.zte'):
-            return filepath + '.zte'
-        return filepath
-
     def _update_action_button(self):
         if self.mode.get() == "encrypt":
             self.action_button.config(text="ENCRYPT FILE")
@@ -123,18 +117,16 @@ class ZeroTrustEncryptorGUI:
 
     def _run_crypto(self):
         try:
-            output_path = self._ensure_zte_extension(self.output_file.get())
-            
             if self.mode.get() == "encrypt":
                 zt_encrypt.encrypt_file(
                     self.input_file.get(),
-                    output_path,
+                    self.output_file.get(),
                     self.password.get()
                 )
             else:
                 zt_encrypt.decrypt_file(
                     self.input_file.get(),
-                    output_path,
+                    self.output_file.get(),
                     self.password.get()
                 )
 
