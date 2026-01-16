@@ -8,7 +8,8 @@ class ZeroTrustEncryptorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Zero-Trust AES-256 File Encryptor")
-        self.root.geometry("560x420")
+        self.root.geometry("560x600")
+        self.root.update_idletasks()
         self.root.resizable(False, False)
 
         self.mode = tk.StringVar(value="encrypt")
