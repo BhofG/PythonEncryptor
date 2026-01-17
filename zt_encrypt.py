@@ -1,6 +1,7 @@
 import os
 import struct
 import sys
+import getpass
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
@@ -148,6 +149,14 @@ def secure_wipe(data: bytes):
             mutable[i] = 0
 
 
+def secure_wipe_string(s: str):
+    """Secure wipe untuk string password"""
+    if isinstance(s, str):
+        mutable = bytearray(s.encode())
+        for i in range(len(mutable)):
+            mutable[i] = 0
+
+
 # =====================
 # CLI - INTERACTIVE
 # =====================
@@ -186,27 +195,63 @@ if __name__ == "__main__":
         print("[ERROR] Path output tidak boleh kosong.")
         sys.exit(1)
 
+    # Proteksi overwrite output
+    output_file_final = output_file if output_file.lower().endswith('.zte') else output_file
+    if mode == "encrypt":
+        output_file_final = ensure_zte_extension(output_file)
+    
+    if os.path.exists(output_file_final):
+        while True:
+            overwrite_choice = input(f"\nFile '{output_file_final}' sudah ada. Overwrite? (y/n): ").strip().lower()
+            if overwrite_choice in ["y", "yes"]:
+                break
+            elif overwrite_choice in ["n", "no"]:
+                print("\n[INFO] Operasi dibatalkan.")
+                sys.exit(0)
+            else:
+                print("[ERROR] Masukkan 'y' atau 'n'.")
+
     # Tanyakan password
     while True:
-        password = input("Masukkan passphrase: ").strip()
+        password = getpass.getpass("Masukkan passphrase: ")
         if not password:
             print("[ERROR] Passphrase tidak boleh kosong. Silakan coba lagi.")
             continue
         
         if mode == "encrypt":
-            password_confirm = input("Konfirmasi passphrase: ").strip()
+            password_confirm = getpass.getpass("Konfirmasi passphrase: ")
             if password == password_confirm:
+                secure_wipe_string(password_confirm)
                 break
             else:
                 print("[ERROR] Passphrase tidak cocok. Silakan coba lagi.\n")
+                secure_wipe_string(password)
+                secure_wipe_string(password_confirm)
         else:
             break
+
+    # Tanyakan delete input file (hanya untuk encrypt)
+    delete_input = False
+    if mode == "encrypt":
+        while True:
+            delete_choice = input("\nHapus file input setelah enkripsi? (y/n): ").strip().lower()
+            if delete_choice in ["y", "yes"]:
+                delete_input = True
+                break
+            elif delete_choice in ["n", "no"]:
+                delete_input = False
+                break
+            else:
+                print("[ERROR] Masukkan 'y' atau 'n'.")
 
     # Jalankan operasi
     print("\n" + "-"*50)
     try:
         if mode == "encrypt":
             encrypt_file(input_file, output_file, password)
+            if delete_input:
+                os.remove(input_file)
+                print("[✓] File input dihapus")
         else:
             decrypt_file(input_file, output_file, password)
         print("-"*50)
@@ -215,3 +260,6 @@ if __name__ == "__main__":
         print("-"*50)
         print(f"\n✗ [ERROR] {e}\n")
         sys.exit(1)
+    finally:
+        # Secure wipe password
+        secure_wipe_string(password)
