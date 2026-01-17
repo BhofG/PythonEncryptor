@@ -149,24 +149,69 @@ def secure_wipe(data: bytes):
 
 
 # =====================
-# CLI
+# CLI - INTERACTIVE
 # =====================
 if __name__ == "__main__":
-    import argparse
+    print("\n" + "="*50)
+    print("   ZERO-TRUST AES-256 FILE ENCRYPTOR")
+    print("="*50 + "\n")
 
-    parser = argparse.ArgumentParser(description="ZERO-TRUST AES-256 File Encryption")
-    parser.add_argument("mode", choices=["encrypt", "decrypt"])
-    parser.add_argument("input")
-    parser.add_argument("output")
-    parser.add_argument("--password", required=True)
-
-    args = parser.parse_args()
-
-    try:
-        if args.mode == "encrypt":
-            encrypt_file(args.input, args.output, args.password)
+    # Tanyakan mode
+    while True:
+        print("Pilih Mode:")
+        print("1. Encrypt")
+        print("2. Decrypt")
+        mode_choice = input("\nMasukkan pilihan (1/2): ").strip()
+        
+        if mode_choice == "1":
+            mode = "encrypt"
+            break
+        elif mode_choice == "2":
+            mode = "decrypt"
+            break
         else:
-            decrypt_file(args.input, args.output, args.password)
+            print("[ERROR] Pilihan tidak valid. Silakan coba lagi.\n")
+
+    # Tanyakan input file
+    while True:
+        input_file = input(f"\nMasukkan path file input: ").strip()
+        if os.path.exists(input_file):
+            break
+        else:
+            print("[ERROR] File tidak ditemukan. Silakan coba lagi.")
+
+    # Tanyakan output file
+    output_file = input("Masukkan path file output: ").strip()
+    if not output_file:
+        print("[ERROR] Path output tidak boleh kosong.")
+        sys.exit(1)
+
+    # Tanyakan password
+    while True:
+        password = input("Masukkan passphrase: ").strip()
+        if not password:
+            print("[ERROR] Passphrase tidak boleh kosong. Silakan coba lagi.")
+            continue
+        
+        if mode == "encrypt":
+            password_confirm = input("Konfirmasi passphrase: ").strip()
+            if password == password_confirm:
+                break
+            else:
+                print("[ERROR] Passphrase tidak cocok. Silakan coba lagi.\n")
+        else:
+            break
+
+    # Jalankan operasi
+    print("\n" + "-"*50)
+    try:
+        if mode == "encrypt":
+            encrypt_file(input_file, output_file, password)
+        else:
+            decrypt_file(input_file, output_file, password)
+        print("-"*50)
+        print("\n✓ Operasi berhasil!\n")
     except Exception as e:
-        print(f"[ERROR] {e}")
+        print("-"*50)
+        print(f"\n✗ [ERROR] {e}\n")
         sys.exit(1)
